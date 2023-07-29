@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  email     String   @unique
+  points    Int      @default(100)
+  password  String
+  firstName String?
+  lastName  String?
+  books     Book[]
+  role      Role
+  Order     Order[]
+}
+
+model Book {
+  id         String      @id @default(cuid())
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  title      String
+  coverImage String?
+  points     Float
+  author     User?       @relation(fields: [authorId], references: [id])
+  authorId   String?
+  tags       Tag[]       @relation()
+  OrderItem  OrderItem[]
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  name      String   @unique
+  books     Book[]   @relation()
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  orderNumber Int         @default(autoincrement())
+  totalPoints Float
+  status      OrderStatus
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  items  OrderItem[]
+  user   User?       @relation(fields: [userId], references: [id])
+  userId String
+}
+
+// Enum to define different order statuses
+enum OrderStatus {
+  PENDING
+  DELIVERED
+  CANCELLED
+}
+
+model OrderItem {
+  id       Int   @id @default(autoincrement())
+  quantity Int
+  points   Float
+
+  // Relations
+  book   Book   @relation(fields: [bookId], references: [id])
+  bookId String
+
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String
+}
+
+enum Role {
+  ADMIN
+  USER
+}
